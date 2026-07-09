@@ -1,0 +1,27 @@
+# Demo claims for the cal.com public repo. See ../README.md for the setup commands.
+# The point of the run: one of these claims is confidently false. Find out which
+# from git, not from the agent that wrote them.
+
+# TRUE. The squash commit that landed PR #27588 lives on main.
+- claim_type: contains_commit
+  target: 48cbb94af256fdef4cf5f88fc34b33e8789ae451
+  base: origin/main
+
+# FALSE. This is the head of PR #19464, which was closed WITHOUT merging.
+# An agent claiming this shipped is the exact failure the tool exists to catch.
+- claim_type: merged
+  target: 6feeb745688164564abba0007106cbe9da755df4
+  base: origin/main
+
+# TRUE. The Prisma schema is where it should be.
+- claim_type: path_exists
+  target: packages/prisma/schema.prisma
+  ref: origin/main
+
+# TRUE (coarse). No secret-shaped literal was added by PR #27588.
+- claim_type: no_secrets_added
+  target: 48cbb94af256fdef4cf5f88fc34b33e8789ae451
+
+# UNVERIFIABLE, and the tool says so instead of guessing.
+- claim_type: tests_pass
+  target: the routing-forms suite
