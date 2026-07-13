@@ -64,6 +64,31 @@ straight into a pre-PR hook or CI step. `UNVERIFIABLE` does not fail the run; it
 has to check that fact another way. `--json` emits the same result as structured data, so a dashboard
 can render status from it instead of from prose (guardrail #12 applied to the tool's own output).
 
+## Tests
+
+`selftest.sh` (run above) is the narrated smoke demo. The checked regression contract is a
+fixture-based suite under `claim-check/test/`, run from the repository root:
+
+```
+npm test
+```
+
+It builds a throwaway git repository with known ground truth, runs this CLI against it, and
+asserts the `--json` output for every verdict path: the four claim types across `PASS` /
+`FAIL` / `UNVERIFIABLE`, an aggregate run that checks the summary counts, overall verdict and
+process exit code together, explicit exit-`0` and exit-`1` cases, and a byte-for-byte
+determinism check that runs the tool twice against the same repository and compares raw
+stdout with no normalisation. Commit SHAs are taken from the fixture builder and asserted, not
+stripped. The suite also pins the squash/rebase boundary: a squash-merged branch's original
+head reads `merged` **FAIL** while the landed file is independently observable via
+`path_exists` **PASS** — both are asserted, so ancestry is never mistaken for content-level
+merge detection.
+
+Runtime note: the CLI itself is dependency-free and runs on **Node 14+**. The test suite is
+separate — it uses the built-in `node:test` module and its top-level `before` / `after` hooks
+(**Node 18.8+**; the runner is stable from Node 20) and installs nothing (`package.json`
+declares no dependencies). The suite has been exercised on Node 24.
+
 ## Reproducible demo: catching a false "merged" claim on a public repo
 
 The demo runs against [`calcom/cal.com`](https://github.com/calcom/cal.com) so anyone can reproduce or
