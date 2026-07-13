@@ -1,0 +1,11 @@
+{
+  "name": "agentic-delivery-guardrails",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Guardrails and a runnable claim-checker for AI-assisted delivery.",
+  "license": "MIT",
+  "//": "The claim-check CLI (claim-check/claim-check.js) is dependency-free and runs on Node 14+. This package.json exists only to run the regression suite, which uses the built-in node:test module and therefore needs Node 18+. No 'engines' field is declared on purpose, so the test tooling's Node 18 requirement is not misread as the CLI's runtime requirement.",
+  "scripts": {
+    "test": "node --test claim-check/test/claim-check.test.js"
+  }
+}

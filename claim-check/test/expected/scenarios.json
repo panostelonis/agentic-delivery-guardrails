@@ -1,0 +1,79 @@
+{
+  "_comment": "Semantic expected results for the claim-check regression suite. Volatile commit SHAs are NOT hard-coded: a claim target of \"@name\" is resolved at runtime to the SHA that fixtures.js reported for that commit, and reason tokens {short}/{full} are filled with that same SHA (short = first 10 hex chars + ellipsis, matching the CLI). result, claim_type, summary, verdict and exit code are exact.",
+  "base": "main",
+  "scenarios": [
+    {
+      "name": "exact reachable commit -> PASS",
+      "claim": { "claim_type": "contains_commit", "target": "@c2", "base": "main" },
+      "expect": { "result": "PASS", "claim_type": "contains_commit", "reason": "{short} is an ancestor of main" }
+    },
+    {
+      "name": "known unreachable commit -> FAIL",
+      "claim": { "claim_type": "merged", "target": "@feature", "base": "main" },
+      "expect": { "result": "FAIL", "claim_type": "merged", "reason": "{short} is not an ancestor of main (a squash- or rebase-merged branch also reads FAIL here — verify those by content/path, not by this commit id)" }
+    },
+    {
+      "name": "unknown commit -> UNVERIFIABLE",
+      "claim": { "claim_type": "merged", "target": "0000000000000000000000000000000000000000", "base": "main" },
+      "expect": { "result": "UNVERIFIABLE", "claim_type": "merged", "reason": "cannot resolve target \"0000000000000000000000000000000000000000\" in this repo (fetch it, then re-run)" }
+    },
+    {
+      "name": "existing path -> PASS",
+      "claim": { "claim_type": "path_exists", "target": "packages/prisma/schema.prisma", "ref": "main" },
+      "expect": { "result": "PASS", "claim_type": "path_exists", "reason": "\"packages/prisma/schema.prisma\" exists at main" }
+    },
+    {
+      "name": "missing path -> FAIL",
+      "claim": { "claim_type": "path_exists", "target": "does/not/exist.txt", "ref": "main" },
+      "expect": { "result": "FAIL", "claim_type": "path_exists", "reason": "\"does/not/exist.txt\" does not exist at main" }
+    },
+    {
+      "name": "planted fake secret -> FAIL",
+      "claim": { "claim_type": "no_secrets_added", "target": "@c3" },
+      "expect": { "result": "FAIL", "claim_type": "no_secrets_added", "reason": "added secret-shaped literal — config.js:1 (aws-access-key-id)" }
+    },
+    {
+      "name": "clean commit, no secrets -> PASS",
+      "claim": { "claim_type": "no_secrets_added", "target": "@c2" },
+      "expect": { "result": "PASS", "claim_type": "no_secrets_added", "reason": "no secret-shaped literals in added lines of {full}" }
+    },
+    {
+      "name": "unsupported test claim -> UNVERIFIABLE",
+      "claim": { "claim_type": "tests_pass", "target": "the suite" },
+      "expect": { "result": "UNVERIFIABLE", "claim_type": "tests_pass", "reason": "this tool does not run tests" }
+    },
+    {
+      "name": "squash-merged source head -> ancestry FAIL",
+      "claim": { "claim_type": "merged", "target": "@squashHead", "base": "main" },
+      "expect": { "result": "FAIL", "claim_type": "merged", "reason": "{short} is not an ancestor of main (a squash- or rebase-merged branch also reads FAIL here — verify those by content/path, not by this commit id)" }
+    },
+    {
+      "name": "squash-landed content independently observable -> PASS",
+      "claim": { "claim_type": "path_exists", "target": "squashed-feature.txt", "ref": "main" },
+      "expect": { "result": "PASS", "claim_type": "path_exists", "reason": "\"squashed-feature.txt\" exists at main" }
+    }
+  ],
+  "aggregate": {
+    "summary": { "pass": 4, "fail": 4, "unverifiable": 2 },
+    "verdict": "HOLD (a claim is false)",
+    "exitCode": 1
+  },
+  "exitZero": {
+    "claims": [
+      { "claim_type": "contains_commit", "target": "@c2", "base": "main" },
+      { "claim_type": "path_exists", "target": "packages/prisma/schema.prisma", "ref": "main" },
+      { "claim_type": "tests_pass", "target": "the suite" }
+    ],
+    "summary": { "pass": 2, "fail": 0, "unverifiable": 1 },
+    "verdict": "REVIEW (unverifiable claims — check them another way)",
+    "exitCode": 0
+  },
+  "exitOne": {
+    "claims": [
+      { "claim_type": "path_exists", "target": "does/not/exist.txt", "ref": "main" }
+    ],
+    "summary": { "pass": 0, "fail": 1, "unverifiable": 0 },
+    "verdict": "HOLD (a claim is false)",
+    "exitCode": 1
+  }
+}
